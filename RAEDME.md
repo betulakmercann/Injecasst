@@ -10,12 +10,13 @@ Proje; web uygulaması güvenliği, penetrasyon testi, güvenlik araştırmalar�
 * Endpoint Mapper
 * Parameter Mapper
 * Database Printer
-* Extractor
-* Resource Scanner
-* WAF Bypass Analysis
+* SQLi Validation & Evidence Analyzer
+* SQL Payload Transformer
+* SQLi Surface Mapper
 * Modüler CLI mimarisi
 * Tool bazlı çalışma yapısı
 * Terminal tabanlı kullanım
+* JSON tabanlı çıktı ve raporlama
 * Genişletilebilir araç mimarisi
 
 ## Proje Yapısı
@@ -30,10 +31,11 @@ Injecasst/
 │       ├── parameterMapper.py
 │       ├── dbprint.py
 │       ├── extractor.py
-│       ├── rescom.py
-│       └── wafbypass.py
+│       ├── payloadTransformer.py
+│       ├── sqliSurfaceMapper.py
+│       └── rescom.py
 ├── LICENSE
-├── RAEDME.md
+├── README.md
 └── pyproject.toml
 ```
 
@@ -103,13 +105,10 @@ Genel çalışma akışı:
 2. InjecAsst ana CLI arayüzü açılır.
 3. Kullanılacak tool seçilir.
 4. Tool tarafından istenen hedef bilgileri girilir.
-5. Analiz gerçekleştirilir.
+5. İlgili analiz gerçekleştirilir.
 6. Sonuçlar terminal üzerinde görüntülenir.
-7. Kullanıcı ana menüye dönebilir veya işlemini sonlandırabilir.
-
-
-
-
+7. Desteklenen araçlarda sonuçlar JSON formatında dışa aktarılabilir.
+8. Kullanıcı ana menüye dönebilir.
 
 ## Tools
 
@@ -129,31 +128,93 @@ https://example.com/login
 
 Endpoint Mapper, hedef web uygulamasında bulunan endpoint'leri tespit etmek ve haritalamak amacıyla geliştirilmiştir.
 
-Elde edilen endpoint bilgileri güvenlik testlerinin sonraki aşamalarında kullanılabilecek şekilde terminal üzerinde görüntülenir.
+Elde edilen endpoint bilgileri, yetkili güvenlik testlerinin sonraki aşamalarında incelenebilecek giriş noktalarının belirlenmesine yardımcı olur.
 
 ### Parameter Mapper
 
-Parameter Mapper, web uygulamalarında kullanılan parametreleri tespit etmek ve analiz etmek amacıyla geliştirilmiştir.
+Parameter Mapper, web uygulamalarında kullanılan parametreleri keşfetmek ve analiz etmek amacıyla geliştirilmiştir.
 
-Tespit edilen parametreler, yetkili güvenlik testlerinde incelenebilecek giriş noktalarının belirlenmesine yardımcı olur.
+Tespit edilen parametreler, yetkili güvenlik testlerinde incelenebilecek potansiyel giriş noktalarının belirlenmesine yardımcı olur.
 
 ### Database Printer
 
-Database Printer, güvenlik testleri sırasında elde edilen veritabanı bilgilerini yapılandırılmış şekilde görüntülemek amacıyla geliştirilmiştir.
+Database Printer, güvenlik testleri sırasında elde edilen veritabanı bilgilerinin yapılandırılmış şekilde görüntülenmesine yardımcı olur.
 
-### Extractor
+Araç, veritabanı ile ilgili bilgilerin terminal üzerinde daha düzenli ve okunabilir şekilde değerlendirilmesi amacıyla kullanılabilir.
 
-Extractor, yetkili güvenlik testleri sırasında elde edilen verilerin analiz edilmesi ve ilgili sonuçların yapılandırılmış şekilde görüntülenmesine yardımcı olur.
+### SQLi Validation & Evidence Analyzer
 
-### Resource Scanner
+SQLi Validation & Evidence Analyzer, bir web uygulamasında keşfedilen giriş yüzeylerinin SQL injection açısından farklılık tabanlı doğrulama kapsamında değerlendirilmesine yardımcı olur.
 
-Resource Scanner, hedef web uygulamasında bulunan veya erişilebilir durumdaki kaynakların incelenmesine yardımcı olur.
+Araç; ölçülmüş bir HTTP baseline oluşturur, keşfedilen parametreleri değerlendirir ve harmless canary değerleri üzerinden yanıt farklılıklarını karşılaştırır.
 
-### WAF Bypass Analysis
+Değerlendirme sırasında aşağıdaki göstergeler karşılaştırılabilir:
 
-WAF Bypass Analysis, web uygulamalarında kullanılan Web Application Firewall mekanizmalarının güvenlik testleri kapsamında değerlendirilmesine yardımcı olur.
+* HTTP status code
+* Response body size
+* Content fingerprint
 
-Bu özellik yalnızca yetkili ve kontrollü güvenlik testlerinde kullanılmalıdır.
+Bir response farklılığının tek başına SQL injection bulunduğunu kanıtlamadığı özellikle dikkate alınmalıdır.
+
+Araç, elde edilen sonuçları güvenlik değerlendirmesi kapsamında kanıt ve analiz verisi olarak sunmayı amaçlar.
+
+### SQL Payload Transformer
+
+SQL Payload Transformer, SQL injection güvenlik testleri kapsamında kullanılabilecek payload dönüşümleri ve payload analizi için tasarlanmış yardımcı bir araçtır.
+
+Araç, SQL injection test süreçlerinde payload'ların farklı biçimlerde değerlendirilmesine yardımcı olacak şekilde modüler yapıda geliştirilmiştir.
+
+### SQLi Surface Mapper
+
+SQLi Surface Mapper, web uygulamalarındaki SQL injection açısından incelenebilecek yüzeyleri belirlemek ve giriş noktalarını yapılandırılmış şekilde değerlendirmek amacıyla geliştirilmiştir.
+
+Araç, uygulamadaki parametreleri ve potansiyel test yüzeylerini güvenlik araştırması kapsamında haritalandırmaya yardımcı olur.
+
+### Resource / Response Scanner
+
+`rescom.py`, web uygulamalarındaki kaynak ve response davranışlarının incelenmesine yardımcı olan yardımcı analiz aracıdır.
+
+Araç, yetkili güvenlik değerlendirmelerinde uygulamanın erişilebilir kaynaklarını ve response davranışlarını incelemek için kullanılabilir.
+
+## Raporlama
+
+InjecAsst içerisindeki desteklenen araçlar analiz sonuçlarını terminal üzerinde görüntüleyebilir ve bazı değerlendirme sonuçlarını JSON formatında dışa aktarabilir.
+
+Örnek çıktı:
+
+```text
+Target Context : https://example.com
+Assessment     : Assessment completed.
+
+PARAMETER VALIDATION
+────────────────────────────────────────────────────────
+
+PARAMETER              │ STATUS │ DIFFERENCE
+id                     │ 200    │ baseline matched
+page                   │ 200    │ body length
+```
+
+JSON raporları, gerçekleştirilen değerlendirmelerin daha sonra incelenebilmesi amacıyla kullanılabilir.
+
+## Modüler Mimari
+
+InjecAsst, araçların birbirinden bağımsız şekilde çalıştırılabilmesine olanak sağlayan modüler bir CLI mimarisine sahiptir.
+
+Ana CLI:
+
+```text
+cli/main.py
+```
+
+Araçlar:
+
+```text
+cli/tools/
+```
+
+Her araç kendi Python modülü içerisinde bulunur ve ana CLI tarafından gerektiğinde çağrılır.
+
+Bu yapı sayesinde yeni güvenlik analiz araçlarının projeye eklenmesi kolaylaştırılmıştır.
 
 ## Açık Kaynak
 
@@ -165,6 +226,7 @@ Projeyi klonlamak için:
 
 ```bash
 git clone https://github.com/betulakmercann/Injecasst.git
+cd Injecasst
 ```
 
 ### Resmi Repository
@@ -176,7 +238,6 @@ https://github.com/betulakmercann/Injecasst
 ```
 
 GitHub üzerindeki fork'lar, türetilmiş çalışmalar ve üçüncü taraf değişiklikler resmi InjecAsst sürümü olarak kabul edilmez.
-
 
 ## Katkıda Bulunma
 
@@ -193,8 +254,6 @@ https://github.com/betulakmercann/Injecasst
 ```
 
 GitHub sayfasında sağ üst bölümde bulunan **Fork** butonuna tıklayın.
-
-GitHub sizden fork'un oluşturulacağı hesabı seçmenizi isteyebilir. Kendi hesabınızı seçerek devam edin.
 
 Bunun sonucunda InjecAsst repository'sinin kendi GitHub hesabınızdaki bağımsız bir kopyası oluşturulur.
 
@@ -295,8 +354,6 @@ Branch'inizi gönderdikten sonra GitHub fork repository'nize gidin.
 
 GitHub genellikle yeni branch'iniz için **Compare & pull request** veya **Open pull request** seçeneğini gösterecektir.
 
-Bu seçeneğe tıklayın.
-
 Pull Request oluştururken:
 
 * Yaptığınız değişiklikleri açıklayın.
@@ -322,7 +379,7 @@ Daha sonra **Create pull request** butonuna tıklayın.
 
 ### 8. Pull Request İncelemesi
 
-Pull Request oluşturulduktan sonra değişiklikler InjecAsst'in maintainer'ı tarafından incelenir.
+Pull Request oluşturulduktan sonra değişiklikler InjecAsst maintainer'ı tarafından incelenir.
 
 Değişiklikler uygun bulunursa Pull Request `main` branch'ine merge edilebilir.
 
@@ -334,7 +391,7 @@ git commit -m "Address review feedback"
 git push origin feature/new-feature
 ```
 
-Yeni commit'ler otomatik olarak mevcut Pull Request'e eklenir.
+Yeni commit'ler mevcut Pull Request'e otomatik olarak eklenir.
 
 ### Katkı Süreci
 
@@ -383,7 +440,6 @@ beklenmektedir.
 
 Her Pull Request'in kabul edileceği garanti edilmez. Katkıların incelenmesi ve kabul edilmesi InjecAsst projesinin maintainer'ının değerlendirmesine bağlıdır.
 
-
 ## Güvenlik ve Yasal Uyarı
 
 InjecAsst bir güvenlik araştırması ve yetkili test aracıdır.
@@ -408,7 +464,9 @@ Aracın herhangi bir özelliğinin bulunması, kullanıcıya herhangi bir sistem
 ## Lisans ve Marka
 
 InjecAsst kaynak kodu, repository içerisinde bulunan `LICENSE` dosyasında belirtilen lisans koşullarına tabidir.
-Kaynak kodunun açık kaynak olarak sunulması, **InjecAsst** 'in  kullanımına otomatik olarak izin verildiği anlamına gelmez.
+
+Kaynak kodunun açık kaynak olarak sunulması, **InjecAsst** kullanımına otomatik olarak sınırsız izin verildiği anlamına gelmez.
+
 Projeyi lisans koşullarına uygun şekilde fork edebilir, inceleyebilir veya değiştirebilirsiniz. Ancak değiştirilmiş, fork'lanmış veya türetilmiş bir sürüm:
 
 * Resmi InjecAsst sürümü gibi sunulamaz.
